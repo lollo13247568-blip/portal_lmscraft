@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMCraft1 Network - Portal</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0d0d11',
+                        darkcard: '#161619',
+                        darkborder: '#2A2A30',
+                        panelCard: '#1f1f2e',
+                        neonCyan: '#00f3ff',
+                        neonPurple: '#b026ff',
+                        neonOrange: '#ff6600',
+                        neonGreen: '#00ff88',
+                        neonRed: '#ff2a5f',
+                        accentpurple: '#8B5CF6'
+                    },
+                    fontFamily: {
+                        pixel: ['"Press Start 2P"', 'monospace'],
+                        sans: ['Inter', 'sans-serif'],
+                        cyber: ['Orbitron', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@600;800;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #0d0d11;
+            color: #E5E7EB;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
+            letter-spacing: -0.5px;
+        }
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0d11;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A2A30;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8B5CF6;
+        }
+        .minecraft-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+        }
+        @keyframes floating {
+            0% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.4)); }
+            50% { transform: translateY(-6px); filter: drop-shadow(0 0 20px rgba(176, 38, 255, 0.7)); }
+            100% { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.4)); }
+        }
+        .animate-floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-heartbeat {
+            animation: heartbeat 2s infinite ease-in-out;
+        }
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-purple-500 selection:text-white relative">
+
+    <canvas id="particleCanvas" class="canvas-container"></canvas>
+
+    <!-- MAIN NAVBAR GLOBAL -->
+    <header class="w-full bg-[#111118]/90 backdrop-blur-md border-b border-[#2A2A30] px-4 sm:px-8 py-3 flex items-center justify-between z-40 sticky top-0">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchGlobalTab('home')">
+            <div class="w-9 h-9 bg-purple-600 rounded-lg flex items-center justify-center minecraft-shadow border border-purple-400">
+                <i class="fa-solid fa-cube text-white text-sm"></i>
+            </div>
+            <div>
+                <h1 class="pixel-font text-xs sm:text-sm text-purple-400 tracking-wider">LMCRAFT1</h1>
+                <p class="text-[10px] text-gray-400">Official Server Network</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="switchGlobalTab('home')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#16161f] hover:bg-[#222230] border border-[#2A2A30] text-gray-300">
+                <i class="fa-solid fa-house mr-1"></i> Home
+            </button>
+            <button onclick="switchGlobalTab('store')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#16161f] hover:bg-[#222230] border border-[#2A2A30] text-cyan-400">
+                <i class="fa-solid fa-cart-shopping mr-1"></i> Store
+            </button>
+            <button onclick="switchGlobalTab('banlist')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#16161f] hover:bg-[#222230] border border-[#2A2A30] text-red-400">
+                <i class="fa-solid fa-gavel mr-1"></i> Banlist
+            </button>
+
+            <!-- Admin Badge -->
+            <div id="globalAdminBadge" class="hidden items-center space-x-2 bg-emerald-950/60 border border-emerald-600/50 px-3 py-1 rounded-full text-xs text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Admin Logged</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- SEZIONE 1: PANEL HOME -->
+    <main id="global-section-home" class="global-tab flex-grow container mx-auto px-4 py-12 max-w-5xl relative z-10 flex flex-col items-center justify-center">
+        <div class="w-full bg-[#16161f]/90 border border-[#2A2A30] rounded-3xl p-8 sm:p-12 minecraft-shadow text-center space-y-8 backdrop-blur-md">
+            
+            <div class="space-y-4">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-bold tracking-widest uppercase">
+                    <i class="fa-solid fa-sparkles"></i> LMCraft1 Network Portal
+                </div>
+                <h1 class="pixel-font text-2xl sm:text-4xl text-white tracking-wide leading-relaxed drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">
+                    BENVENUTO!!!!
+                </h1>
+                <p class="text-gray-400 text-sm max-w-xl mx-auto">
+                    Seleziona una delle destinazioni sottostanti per esplorare lo store ufficiale del server o consultare il registro sanzioni.
+                </p>
+            </div>
+
+            <!-- BUTTONS NAVIGATION HOME -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto pt-4">
+                <!-- VAI ALLO STORE -->
+                <button onclick="switchGlobalTab('store')" class="group relative bg-gradient-to-br from-purple-900/50 to-indigo-900/50 hover:from-purple-800 hover:to-indigo-800 border-2 border-purple-500/50 hover:border-purple-400 p-6 rounded-2xl transition-all duration-300 minecraft-shadow flex flex-col items-center space-y-3 cursor-pointer">
+                    <div class="w-16 h-16 rounded-xl bg-purple-600/20 border border-purple-400/30 flex items-center justify-center text-purple-400 text-2xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-cyber font-bold text-lg text-white">STORE UFFICIALE</h3>
+                        <p class="text-xs text-purple-200 mt-1">Acquista VIP Rank, Token e Unban</p>
+                    </div>
+                </button>
+
+                <!-- VAI ALLA BANLIST -->
+                <button onclick="switchGlobalTab('banlist')" class="group relative bg-gradient-to-br from-red-900/50 to-amber-900/50 hover:from-red-800 hover:to-amber-800 border-2 border-red-500/50 hover:border-red-400 p-6 rounded-2xl transition-all duration-300 minecraft-shadow flex flex-col items-center space-y-3 cursor-pointer">
+                    <div class="w-16 h-16 rounded-xl bg-red-600/20 border border-red-400/30 flex items-center justify-center text-red-400 text-2xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-gavel"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-cyber font-bold text-lg text-white">SANCTIONS LOG</h3>
+                        <p class="text-xs text-red-200 mt-1">Consulta la lista dei Ban e Mute</p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- HIDDEN ADMIN BUTTON -->
+            <div class="pt-8 border-t border-[#2A2A30]/60 flex justify-center">
+                <button onclick="openAdminModal()" class="inline-flex items-center space-x-2 text-xs text-gray-500 hover:text-purple-400 bg-[#0d0d11] hover:bg-[#121218] px-4 py-2 rounded-xl border border-gray-800 hover:border-purple-500/40 transition-all cursor-pointer">
+                    <i class="fa-solid fa-key text-xs"></i>
+                    <span>Pannello Segreto (Admin)</span>
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- SEZIONE 2: STORE PANEL -->
+    <div id="global-section-store" class="global-tab hidden flex-grow relative z-10">
+        <div class="flex min-h-[calc(100vh-57px)]">
+            
+            <!-- STORE SIDEBAR -->
+            <aside class="w-20 md:w-64 bg-[#121219]/95 backdrop-blur border-r border-[#2A2A30] flex flex-col justify-between py-6 px-3 md:px-4 shrink-0">
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3 px-2">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20 font-black text-xl text-darkBg font-cyber">
+                            L
+                        </div>
+                        <div class="hidden md:block">
+                            <h2 class="font-cyber font-black text-lg text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">LMSMP1</h2>
+                            <p class="text-[10px] text-gray-400 tracking-widest uppercase">Store</p>
+                        </div>
+                    </div>
+
+                    <!-- SIDEBAR NAV -->
+                    <nav class="space-y-2 mt-8">
+                        <button onclick="switchStoreTab('home')" id="nav-store-home" class="store-nav-btn w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl transition-all group text-white bg-[#1c1c2b] border border-cyan-400/80">
+                            <i class="fa-solid fa-house text-cyan-400 text-sm"></i>
+                            <span class="hidden md:block font-semibold text-sm">Home Store</span>
+                        </button>
+
+                        <button onclick="switchStoreTab('ranks')" id="nav-store-ranks" class="store-nav-btn w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl transition-all group text-gray-400 hover:text-white hover:bg-[#1c1c2b]">
+                            <i class="fa-solid fa-crown text-amber-400 text-sm"></i>
+                            <span class="hidden md:block font-semibold text-sm">Ranks</span>
+                        </button>
+
+                        <button onclick="switchStoreTab('tokens')" id="nav-store-tokens" class="store-nav-btn w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl transition-all group text-gray-400 hover:text-white hover:bg-[#1c1c2b]">
+                            <i class="fa-solid fa-gem text-purple-400 text-sm"></i>
+                            <span class="hidden md:block font-semibold text-sm">Token</span>
+                        </button>
+
+                        <button onclick="switchStoreTab('unban')" id="nav-store-unban" class="store-nav-btn w-full flex items-center gap-3.5 px-3.5 py-3 rounded-2xl transition-all group text-gray-400 hover:text-white hover:bg-[#1c1c2b]">
+                            <i class="fa-solid fa-shield-halved text-red-400 text-sm"></i>
+                            <span class="hidden md:block font-semibold text-sm">Unban</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="hidden md:block bg-gradient-to-r from-emerald-950/80 to-slate-900 border border-emerald-500/40 p-3.5 rounded-2xl animate-heartbeat">
+                    <p class="text-[10px] text-emerald-400 font-bold uppercase">PROMOZIONE ATTIVA</p>
+                    <p class="text-xs font-black text-white">SCONTO -20% SUL CARRELLO</p>
+                </div>
+            </aside>
+
+            <!-- STORE MAIN CONTENT -->
+            <main class="flex-1 p-4 md:p-8 overflow-y-auto max-w-7xl mx-auto">
+                
+                <!-- CART BAR TOP -->
+                <div class="flex justify-end mb-6">
+                    <button onclick="toggleCart()" class="relative bg-gradient-to-r from-purple-900/60 to-slate-800 border border-purple-500/40 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-lg">
+                        <i class="fa-solid fa-cart-shopping text-cyan-400"></i>
+                        <span>CARRELLO STORE</span>
+                        <span id="cartBadge" class="bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-black animate-pulse">0</span>
+                    </button>
+                </div>
+
+                <!-- STORE TAB 1: HOME STORE -->
+                <div id="store-tab-home" class="store-section space-y-8">
+                    <div class="bg-gradient-to-br from-[#16161f] to-[#1c1c2b] border border-[#2A2A30] p-8 rounded-3xl shadow-2xl text-center space-y-6">
+                        <h2 class="text-3xl font-black font-cyber text-white">BENVENUTO NELLO STORE</h2>
+                        <p class="text-gray-400 text-sm max-w-xl mx-auto">Inserisci il tuo Nickname Minecraft per associare gli acquisti al tuo account.</p>
+
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+                            <div class="flex items-center gap-3 bg-[#0d0d11] border border-[#2A2A30] px-4 py-3 rounded-2xl w-full">
+                                <img id="storeSkinHead" src="https://minotar.net/avatar/Steve/32.png" class="w-8 h-8 rounded">
+                                <input type="text" id="storeUsernameInput" value="Steve" oninput="updateStoreUsername(this.value)" class="bg-transparent text-white font-bold outline-none text-sm w-full font-cyber" placeholder="Nickname MC...">
+                            </div>
+                            <button onclick="switchStoreTab('ranks')" class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-black font-black px-6 py-3.5 rounded-2xl text-xs font-cyber cursor-pointer whitespace-nowrap">
+                                ESPLORA PRODOTTI
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STORE TAB 2: RANKS -->
+                <div id="store-tab-ranks" class="store-section hidden space-y-6">
+                    <h2 class="text-2xl font-black font-cyber text-amber-400">RANKS VIP</h2>
+                    <div id="ranksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+                </div>
+
+                <!-- STORE TAB 3: TOKENS -->
+                <div id="store-tab-tokens" class="store-section hidden space-y-6">
+                    <h2 class="text-2xl font-black font-cyber text-purple-400">PACCHETTI TOKEN</h2>
+                    <div id="tokensGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                </div>
+
+                <!-- STORE TAB 4: UNBAN -->
+                <div id="store-tab-unban" class="store-section hidden space-y-6">
+                    <h2 class="text-2xl font-black font-cyber text-red-400">SERVIZIO UNBAN</h2>
+                    <div id="unbanGrid" class="max-w-xl mx-auto"></div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- SEZIONE 3: BANLIST PANEL -->
+    <div id="global-section-banlist" class="global-tab hidden flex-grow container mx-auto px-4 sm:px-6 py-6 max-w-6xl relative z-10">
+        <!-- VISTA TABELLA BANLIST -->
+        <div id="banlistMainView" class="space-y-6">
+            <div class="relative bg-gradient-to-r from-purple-900 via-purple-800 to-indigo-900 rounded-2xl p-6 sm:p-8 minecraft-shadow border border-purple-500/30 overflow-hidden">
+                <div class="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div class="text-center sm:text-left">
+                        <div class="inline-flex items-center space-x-2 bg-purple-950/60 border border-purple-500/40 px-3 py-1 rounded-full text-xs text-purple-300 mb-3">
+                            <i class="fa-solid fa-server"></i>
+                            <span>LMCraft1 Moderation</span>
+                        </div>
+                        <h2 class="pixel-font text-lg sm:text-2xl text-white tracking-wide mb-2">SANCTIONS LOG</h2>
+                        <p class="text-xs sm:text-sm text-purple-200 max-w-xl">
+                            Database dei provvedimenti disciplinari del network LMCraft1 (Server SMP).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#161619] border border-[#2A2A30] rounded-2xl minecraft-shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#121215] border-b border-[#2A2A30] text-[11px] font-semibold text-gray-400 tracking-wider">
+                                <th class="py-3.5 px-4"># ID</th>
+                                <th class="py-3.5 px-4">PLAYER</th>
+                                <th class="py-3.5 px-4">REASON</th>
+                                <th class="py-3.5 px-4">DATE</th>
+                                <th class="py-3.5 px-4">DURATION</th>
+                                <th class="py-3.5 px-4 text-right">ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sanctionsTableBody" class="divide-y divide-[#2A2A30]/50 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA DETTAGLI GIOCATORE INLINE -->
+        <div id="banlistProfileView" class="hidden space-y-6">
+            <button onclick="closePlayerProfile()" class="inline-flex items-center space-x-2 bg-[#161619] hover:bg-[#202025] text-gray-300 border border-[#2A2A30] px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Torna alla Lista Sanzioni</span>
+            </button>
+
+            <div class="bg-[#161619] border border-[#2A2A30] rounded-2xl p-6 sm:p-8 minecraft-shadow relative overflow-hidden">
+                <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10">
+                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 bg-[#0D0D0D] rounded-2xl border-2 border-purple-500/40 p-2 flex items-center justify-center">
+                        <img id="profileHead" src="" alt="Player Head" class="w-full h-full object-cover rounded-lg pixelated">
+                    </div>
+                    <div class="text-center sm:text-left flex-grow">
+                        <h2 id="profileName" class="pixel-font text-lg sm:text-xl text-white mb-2"></h2>
+                        <p id="profileUuid" class="text-xs text-gray-400 font-mono mb-4 flex items-center justify-center sm:justify-start space-x-2">
+                            <i class="fa-solid fa-fingerprint text-purple-400"></i>
+                            <span></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#161619] border border-[#2A2A30] rounded-2xl p-6 minecraft-shadow">
+                <h3 class="pixel-font text-xs text-white mb-4 flex items-center space-x-2">
+                    <i class="fa-solid fa-timeline text-purple-400"></i>
+                    <span>DETTAGLI SANZIONE</span>
+                </h3>
+                <div id="profileDetailsContainer" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="w-full bg-[#121215]/80 border-t border-[#2A2A30] py-4 text-center text-xs text-gray-500 relative z-10">
+        <p>LMCraft1 Network &copy; 2026. Tutti i diritti riservati.</p>
+    </footer>
+
+    <!-- MODAL ADMIN LOGIN & DASHBOARD UNIFICATA -->
+    <div id="adminModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-[#161619] border border-[#2A2A30] rounded-2xl w-full max-w-3xl p-6 minecraft-shadow relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeAdminModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <!-- LOGIN FORM (PASSWORD: admin123) -->
+            <div id="adminLoginForm" class="space-y-4">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                        <i class="fa-solid fa-lock text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="pixel-font text-xs text-white">ACCESSO AMMINISTRATORE</h3>
+                        <p class="text-xs text-gray-400">Inserisci la password per gestire il network</p>
+                    </div>
+                </div>
+                <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-300 mb-1">Password</label>
+                        <input type="password" id="adminPasswordInput" placeholder="••••••••" required class="w-full bg-[#0D0D0D] border border-[#2A2A30] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div id="adminLoginError" class="text-xs text-red-400 hidden">Password errata!</div>
+                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl text-xs font-bold font-cyber cursor-pointer">AUTENTICATI</button>
+                </form>
+            </div>
+
+            <!-- DASHBOARD ADMIN UNIFICATA -->
+            <div id="adminDashboard" class="hidden space-y-6">
+                <div class="flex items-center justify-between border-b border-[#2A2A30] pb-4">
+                    <div>
+                        <h3 class="font-cyber font-bold text-lg text-white">PANNELLO DI CONTROLLO ADMIN</h3>
+                        <p class="text-xs text-gray-400">Gestisci lo Store, le Sanzioni e gli Acquisti degli Utenti</p>
+                    </div>
+                    <button onclick="adminLogout()" class="bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">Logout</button>
+                </div>
+
+                <!-- PULSANTE SPECIALE PER GESTIONE ACQUISTI E ORDINI -->
+                <div class="bg-gradient-to-r from-cyan-950/70 to-purple-950/70 border border-cyan-500/40 p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 text-xl">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-cyber font-bold text-sm text-white">REGISTRO ACQUISTI STORE</h4>
+                            <p class="text-xs text-cyan-200">Visualizza chi ha comprato, cosa, gestisci staffer ed elimina ordini.</p>
+                        </div>
+                    </div>
+                    <button onclick="openPurchasesModal()" class="w-full sm:w-auto bg-cyan-500 hover:bg-cyan-400 text-black font-black px-5 py-3 rounded-xl text-xs font-cyber cursor-pointer whitespace-nowrap transition-all shadow-lg shadow-cyan-500/20">
+                        <i class="fa-solid fa-list-check mr-1.5"></i> GESTIONE ACQUISTI
+                    </button>
+                </div>
+
+                <!-- SEZIONE 1: GESTIONE SANZIONI -->
+                <div class="bg-[#0D0D0D] p-4 rounded-xl border border-[#2A2A30] space-y-4">
+                    <h4 class="text-xs font-bold text-red-400 font-cyber flex items-center gap-2">
+                        <i class="fa-solid fa-gavel"></i> GESTIONE BANLIST (AGGIUNGI BAN / MUTE / WARN)
+                    </h4>
+                    <form onsubmit="handleAddNewSanction(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Nome Giocatore</label>
+                            <input type="text" id="sanctionPlayerName" placeholder="Es. Steve" required class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Tipo Sanzione</label>
+                            <select id="sanctionType" class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                                <option value="BAN">BAN</option>
+                                <option value="MUTE">MUTE</option>
+                                <option value="WARN">WARN</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Durata</label>
+                            <input type="text" id="sanctionDuration" placeholder="Es. Permanent o 7 days" required class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Motivazione (Reason)</label>
+                            <input type="text" id="sanctionReason" placeholder="Es. Cheating / Spam" required class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold font-cyber cursor-pointer">APPLICA E SALVA SANZIONE</button>
+                        </div>
+                    </form>
+
+                    <div class="pt-2 border-t border-[#2A2A30]">
+                        <h5 class="text-[11px] font-bold text-gray-400 mb-2">SANZIONI ATTIVE NELLA BANLIST:</h5>
+                        <div id="adminSanctionManageList" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+
+                <!-- SEZIONE 2: GESTIONE STORE -->
+                <div class="bg-[#0D0D0D] p-4 rounded-xl border border-[#2A2A30] space-y-4">
+                    <h4 class="text-xs font-bold text-cyan-400 font-cyber flex items-center gap-2">
+                        <i class="fa-solid fa-store"></i> GESTIONE STORE (AGGIUNGI PRODOTTI)
+                    </h4>
+                    <form onsubmit="handleAddNewStoreProduct(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Categoria</label>
+                            <select id="newProdCategory" class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                                <option value="ranks">Ranks</option>
+                                <option value="tokens">Tokens</option>
+                                <option value="unban">Unban</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Nome Prodotto</label>
+                            <input type="text" id="newProdName" placeholder="Es. Rank Leggendario" required class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Prezzo (€)</label>
+                            <input type="number" step="0.01" id="newProdPrice" placeholder="10.00" required class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-400 mb-1">Icona FontAwesome</label>
+                            <input type="text" id="newProdIcon" placeholder="fa-crown" value="fa-star" required class="w-full bg-[#16161f] border border-[#2A2A30] rounded-lg p-2 text-xs text-white">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-bold font-cyber cursor-pointer">AGGIUNGI PRODOTTO ALLO STORE</button>
+                        </div>
+                    </form>
+
+                    <div class="pt-2 border-t border-[#2A2A30]">
+                        <h5 class="text-[11px] font-bold text-gray-400 mb-2">PRODOTTI ATTUALMENTE IN STORE:</h5>
+                        <div id="adminProductManageList" class="space-y-2 max-h-36 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL SPECIALE: FINESTRA DEDICATA GESTIONE ACQUISTI -->
+    <div id="purchasesModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="bg-[#161619] border border-cyan-500/40 rounded-2xl w-full max-w-4xl p-6 minecraft-shadow relative max-h-[90vh] flex flex-col justify-between space-y-4">
+            
+            <div class="flex items-center justify-between border-b border-[#2A2A30] pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
+                        <i class="fa-solid fa-cart-check text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-cyber font-bold text-base text-white">GESTIONE ACQUISTI E ASSEGNAZIONE STAFFER</h3>
+                        <p class="text-xs text-gray-400">Controlla chi ha acquistato, vedi i dettagli ed assegna lo Staffer preposto.</p>
+                    </div>
+                </div>
+                <button onclick="closePurchasesModal()" class="text-gray-400 hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- TABELLA / LISTA ACQUISTI -->
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="purchasesListContainer">
+                <!-- Generato via JavaScript -->
+            </div>
+
+            <div class="border-t border-[#2A2A30] pt-4 flex justify-between items-center text-xs text-gray-400">
+                <span>Totale Ordini Registrati: <strong id="totalPurchasesCount" class="text-cyan-400">0</strong></span>
+                <button onclick="closePurchasesModal()" class="bg-[#222230] hover:bg-[#2b2b3d] text-white px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUB-MODAL: INFO DETTAGLIATA ACQUISTO -->
+    <div id="purchaseInfoModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-[#16161f] border border-purple-500/50 rounded-2xl w-full max-w-md p-6 minecraft-shadow relative space-y-5">
+            <button onclick="closePurchaseInfoModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="flex items-center gap-3 border-b border-[#2A2A30] pb-3">
+                <img id="infoPlayerHead" src="" class="w-12 h-12 rounded-xl border border-purple-400/50 bg-[#0d0d11]">
+                <div>
+                    <h4 id="infoPlayerName" class="font-cyber font-bold text-base text-white"></h4>
+                    <p id="infoPurchaseDate" class="text-xs text-purple-400"></p>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <h5 class="text-xs font-bold text-gray-300 uppercase tracking-wider">Prodotti Acquistati:</h5>
+                <div id="infoItemsList" class="space-y-2 max-h-48 overflow-y-auto"></div>
+            </div>
+
+            <div class="bg-[#0d0d11] p-3 rounded-xl border border-[#2A2A30] space-y-1 text-xs">
+                <div class="flex justify-between text-gray-400"><span>Totale Speso:</span><strong id="infoTotalPrice" class="text-orange-400 font-cyber"></strong></div>
+                <div class="flex justify-between text-gray-400"><span>Staffer Assegnato:</span><strong id="infoAssignedStaffer" class="text-cyan-400 font-cyber">nessuno</strong></div>
+            </div>
+
+            <button onclick="closePurchaseInfoModal()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl text-xs font-bold font-cyber cursor-pointer">CHIUDI INFO</button>
+        </div>
+    </div>
+
+    <!-- SUB-MODAL: ASSEGNA STAFFER -->
+    <div id="assignStafferModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-[#16161f] border border-cyan-500/50 rounded-2xl w-full max-w-md p-6 minecraft-shadow relative space-y-4">
+            <button onclick="closeAssignStafferModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="flex items-center gap-3 border-b border-[#2A2A30] pb-3">
+                <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <div>
+                    <h4 class="font-cyber font-bold text-sm text-white">ASSEGNA STAFFER</h4>
+                    <p class="text-xs text-gray-400">Inserisci il nome dello staffer responsabile</p>
+                </div>
+            </div>
+
+            <form onsubmit="saveAssignedStaffer(event)" class="space-y-4">
+                <input type="hidden" id="assignPurchaseId">
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">Nome Staffer</label>
+                    <input type="text" id="stafferNameInput" placeholder="Es. AdminMaster / SupporterAlex" required class="w-full bg-[#0d0d11] border border-[#2A2A30] rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+                </div>
+                <button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-black py-2.5 rounded-xl text-xs font-cyber cursor-pointer">SALVA ASSEGNAZIONE</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CARRELLO DRAWER -->
+    <div id="cartDrawer" class="fixed top-0 right-0 w-full sm:w-96 h-full bg-[#16161f] border-l border-[#2A2A30] z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between shadow-2xl">
+        <div class="p-5 border-b border-[#2A2A30] flex items-center justify-between">
+            <div class="flex items-center gap-2 font-cyber font-bold text-white">
+                <i class="fa-solid fa-cart-shopping text-cyan-400"></i>
+                <span>IL TUO CARRELLO</span>
+            </div>
+            <button onclick="toggleCart()" class="text-gray-400 hover:text-white cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div id="cartItemsContainer" class="flex-1 overflow-y-auto p-5 space-y-4"></div>
+        <div class="p-5 border-t border-[#2A2A30] bg-[#121219] space-y-4">
+            <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-400">Utente:</span>
+                <span id="cartUsernameDisplay" class="font-bold text-cyan-400 font-cyber">Steve</span>
+            </div>
+            <div class="flex items-center justify-between text-base font-bold">
+                <span class="text-white">Totale:</span>
+                <span id="cartTotalPrice" class="text-orange-400 font-cyber text-xl">€0,00</span>
+            </div>
+            <button onclick="checkout()" id="checkoutBtn" disabled class="w-full bg-emerald-500 text-black font-black py-3.5 rounded-2xl text-xs font-cyber cursor-pointer disabled:opacity-50">PROCEDI AL PAGAMENTO</button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 bg-[#16161f] border border-purple-500/50 text-white px-5 py-3 rounded-2xl shadow-2xl z-50 transform translate-y-32 opacity-0 transition-all duration-300 flex items-center gap-3">
+        <div id="toastIcon" class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div>
+            <h4 id="toastTitle" class="text-xs font-bold font-cyber">Notifica</h4>
+            <p id="toastMessage" class="text-[11px] text-gray-300">Messaggio...</p>
+        </div>
+    </div>
+
+    <!-- SCRIPT LOGIC INTEGRATED -->
+    <script>
+        const DEFAULT_SANCTIONS = [
+            { id: 1001, player: "Steve", uuid: "e2b02f89-8d2b-4e0d-b4b1-8b2b2b2b2b2b", type: "BAN", reason: "Cheating (Killaura)", date: "24/10/2026, 14:30", duration: "Permanent", lobby: "SMP", staffer: "AdminMaster", active: true },
+            { id: 1002, player: "Alex", uuid: "f3c03a90-9e3c-5f1e-c5c2-9c3c3c3c3c3c", type: "MUTE", reason: "Spam in chat", date: "24/10/2026, 12:15", duration: "7 days", lobby: "SMP", staffer: "AdminMaster", active: true }
+        ];
+
+        const DEFAULT_STORE_PRODUCTS = [
+            { id: 1, category: 'ranks', name: 'Rank Novellino', price: 8.00, icon: 'fa-crown' },
+            { id: 2, category: 'ranks', name: 'Rank Guardiano', price: 15.00, icon: 'fa-user-shield' },
+            { id: 3, category: 'ranks', name: 'Rank Imperatore', price: 25.00, icon: 'fa-chess-rook' },
+            { id: 4, category: 'ranks', name: 'Rank Senatore', price: 37.00, icon: 'fa-crown' },
+            { id: 5, category: 'tokens', name: 'Token 1K', price: 3.00, icon: 'fa-gem' },
+            { id: 6, category: 'tokens', name: 'Token 5K', price: 12.00, icon: 'fa-gem' },
+            { id: 7, category: 'tokens', name: 'Token 10K', price: 22.00, icon: 'fa-gem' },
+            { id: 8, category: 'unban', name: 'Unban Completo', price: 8.00, icon: 'fa-lock-open' }
+        ];
+
+        const DEFAULT_PURCHASES = [
+            {
+                id: 5001,
+                player: "Steve",
+                date: "24/10/2026, 15:40",
+                total: 23.00,
+                staffer: "AdminMaster",
+                items: [
+                    { name: "Rank Guardiano", price: 15.00, icon: "fa-user-shield" },
+                    { name: "Token 1K", price: 8.00, icon: "fa-gem" }
+                ]
+            }
+        ];
+
+        let sanctions = JSON.parse(localStorage.getItem('lmcraft1_sanctions')) || DEFAULT_SANCTIONS;
+        let storeProducts = JSON.parse(localStorage.getItem('lmcraft1_store_products')) || DEFAULT_STORE_PRODUCTS;
+        let purchases = JSON.parse(localStorage.getItem('lmcraft1_purchases')) || DEFAULT_PURCHASES;
+
+        let cart = [];
+        let storeUsername = "Steve";
+        let isAdminLoggedIn = sessionStorage.getItem('lmcraft1_is_admin') === 'true';
+
+        function switchGlobalTab(tabId) {
+            document.querySelectorAll('.global-tab').forEach(el => el.classList.add('hidden'));
+            document.getElementById('global-section-' + tabId).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchStoreTab(tabId) {
+            document.querySelectorAll('.store-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById('store-tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.store-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-[#1c1c2b]', 'text-white', 'border', 'border-cyan-400/80');
+                btn.classList.add('text-gray-400');
+            });
+            const active = document.getElementById('nav-store-' + tabId);
+            if(active) {
+                active.classList.remove('text-gray-400');
+                active.classList.add('bg-[#1c1c2b]', 'text-white', 'border', 'border-cyan-400/80');
+            }
+        }
+
+        // BANLIST & PROFILE INLINE
+        function viewPlayerProfile(playerName) {
+            const playerSanction = sanctions.find(s => s.player.toLowerCase() === playerName.toLowerCase());
+            if (!playerSanction) return;
+
+            document.getElementById('banlistMainView').classList.add('hidden');
+            document.getElementById('banlistProfileView').classList.remove('hidden');
+
+            document.getElementById('profileName').textContent = playerSanction.player;
+            document.getElementById('profileUuid').querySelector('span').textContent = `UUID: ${playerSanction.uuid}`;
+            document.getElementById('profileHead').src = `https://minotar.net/helm/${playerSanction.player}/150.png`;
+
+            const container = document.getElementById('profileDetailsContainer');
+            container.innerHTML = `
+                <div class="bg-[#0D0D0D] border border-[#2A2A30] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-bold ${playerSanction.type === 'BAN' ? 'bg-red-500/10 text-red-400 border border-red-500/30' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'}">${playerSanction.type}</span>
+                            <span class="font-mono text-purple-400 text-xs">#${playerSanction.id}</span>
+                            <span class="text-white text-sm font-medium">${playerSanction.reason}</span>
+                        </div>
+                        <div class="text-xs text-gray-400">Data: ${playerSanction.date} | Staffer: ${playerSanction.staffer}</div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs font-semibold text-red-400">${playerSanction.duration}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closePlayerProfile() {
+            document.getElementById('banlistProfileView').classList.add('hidden');
+            document.getElementById('banlistMainView').classList.remove('hidden');
+        }
+
+        function renderBanlistTable() {
+            const tbody = document.getElementById('sanctionsTableBody');
+            tbody.innerHTML = '';
+            sanctions.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#1c1c21] transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono text-purple-400 font-semibold">#${s.id}</td>
+                    <td class="py-3 px-4">
+                        <button onclick="viewPlayerProfile('${s.player}')" class="flex items-center space-x-2 text-white hover:text-purple-400 transition-colors cursor-pointer">
+                            <img src="https://minotar.net/avatar/${s.player}/24.png" class="w-6 h-6 rounded">
+                            <span class="font-medium">${s.player}</span>
+                        </button>
+                    </td>
+                    <td class="py-3 px-4 text-gray-300">${s.reason}</td>
+                    <td class="py-3 px-4 text-gray-400">${s.date}</td>
+                    <td class="py-3 px-4 text-red-400 font-semibold">${s.duration}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="viewPlayerProfile('${s.player}')" class="bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 px-3 py-1 rounded-lg text-xs transition-all cursor-pointer">
+                            Vedi Dettagli
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // STORE FUNCTIONS
+        function renderStoreProducts() {
+            const ranksGrid = document.getElementById('ranksGrid');
+            const tokensGrid = document.getElementById('tokensGrid');
+            const unbanGrid = document.getElementById('unbanGrid');
+
+            ranksGrid.innerHTML = '';
+            tokensGrid.innerHTML = '';
+            unbanGrid.innerHTML = '';
+
+            storeProducts.forEach(prod => {
+                const card = document.createElement('div');
+                card.className = "bg-panelCard border border-[#2A2A30] hover:border-purple-500/50 rounded-3xl p-6 flex flex-col justify-between transition-all shadow-xl";
+                card.innerHTML = `
+                    <div class="space-y-4 text-center">
+                        <div class="w-16 h-16 mx-auto rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-2xl animate-floating">
+                            <i class="fa-solid ${prod.icon}"></i>
+                        </div>
+                        <h3 class="text-base font-black font-cyber text-white">${prod.name}</h3>
+                        <div class="text-xl font-black font-cyber text-cyan-400">€${prod.price.toFixed(2)}</div>
+                    </div>
+                    <button onclick="addToCart('${prod.name}', ${prod.price}, '${prod.icon}')" class="mt-6 w-full bg-[#16161f] hover:bg-purple-600 hover:text-white border border-purple-500/40 text-purple-400 py-2.5 rounded-2xl font-bold text-xs font-cyber cursor-pointer transition-all">
+                        ACQUISTA
+                    </button>
+                `;
+
+                if (prod.category === 'ranks') ranksGrid.appendChild(card);
+                else if (prod.category === 'tokens') tokensGrid.appendChild(card);
+                else if (prod.category === 'unban') unbanGrid.appendChild(card);
+            });
+        }
+
+        function updateStoreUsername(val) {
+            storeUsername = val.trim() || "Steve";
+            document.getElementById('cartUsernameDisplay').textContent = storeUsername;
+            document.getElementById('storeSkinHead').src = `https://minotar.net/avatar/${encodeURIComponent(storeUsername)}/32.png`;
+        }
+
+        function addToCart(name, price, icon) {
+            cart.push({ id: Date.now(), name, price, icon });
+            updateCartUI();
+            showToast('Carrello', `${name} aggiunto al carrello!`, 'fa-cart-shopping');
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cartItemsContainer');
+            const badge = document.getElementById('cartBadge');
+            const totalDisplay = document.getElementById('cartTotalPrice');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            badge.textContent = cart.length;
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 text-xs py-8">Il carrello è vuoto.</p>';
+                totalDisplay.textContent = '€0,00';
+                checkoutBtn.disabled = true;
+                return;
+            }
+
+            checkoutBtn.disabled = false;
+            let total = 0;
+            container.innerHTML = '';
+            cart.forEach(item => {
+                total += item.price;
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-[#121219] p-3 rounded-xl border border-[#2A2A30]";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid ${item.icon} text-purple-400 text-sm"></i>
+                        <div>
+                            <h4 class="text-xs font-bold text-white">${item.name}</h4>
+                            <p class="text-xs text-orange-400">€${item.price.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeFromCart(${item.id})" class="text-gray-500 hover:text-red-400 p-1 cursor-pointer"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                `;
+                container.appendChild(div);
+            });
+            totalDisplay.textContent = `€${total.toFixed(2)}`;
+        }
+
+        function toggleCart() {
+            document.getElementById('cartDrawer').classList.toggle('translate-x-full');
+        }
+
+        function checkout() {
+            if (cart.length === 0) return;
+
+            showToast('Pagamento', 'Elaborazione dell\'acquisto in corso...', 'fa-shield-halved');
+            
+            setTimeout(() => {
+                const now = new Date();
+                const dateStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}, ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
+                const newPurchase = {
+                    id: Date.now(),
+                    player: storeUsername,
+                    date: dateStr,
+                    total: cart.reduce((sum, item) => sum + item.price, 0),
+                    staffer: "non assegnato",
+                    items: [...cart]
+                };
+
+                purchases.unshift(newPurchase);
+                localStorage.setItem('lmcraft1_purchases', JSON.stringify(purchases));
+
+                showToast('Successo', 'Acquisto completato e registrato!', 'fa-circle-check');
+                cart = [];
+                updateCartUI();
+                toggleCart();
+            }, 1200);
+        }
+
+        // ADMIN MODAL CONTROLS
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('adminModal').classList.add('flex');
+            updateAdminUI();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminModal').classList.remove('flex');
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const pwd = document.getElementById('adminPasswordInput').value;
+            if (pwd === 'admin123') {
+                isAdminLoggedIn = true;
+                sessionStorage.setItem('lmcraft1_is_admin', 'true');
+                updateAdminUI();
+                showToast('Admin', 'Autenticazione riuscita!', 'fa-lock-open');
+            } else {
+                document.getElementById('adminLoginError').classList.remove('hidden');
+            }
+        }
+
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            sessionStorage.removeItem('lmcraft1_is_admin');
+            updateAdminUI();
+            showToast('Admin', 'Logout effettuato.', 'fa-right-from-bracket');
+        }
+
+        function updateAdminUI() {
+            const badge = document.getElementById('globalAdminBadge');
+            const loginForm = document.getElementById('adminLoginForm');
+            const dashboard = document.getElementById('adminDashboard');
+
+            if (isAdminLoggedIn) {
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                loginForm.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                renderAdminProductManageList();
+                renderAdminSanctionManageList();
+            } else {
+                badge.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+            }
+        }
+
+        // SEZIONE NUOVA: GESTIONE SPECIALE ACQUISTI (MODAL DEDICATO)
+        function openPurchasesModal() {
+            renderPurchasesList();
+            document.getElementById('purchasesModal').classList.remove('hidden');
+            document.getElementById('purchasesModal').classList.add('flex');
+        }
+
+        function closePurchasesModal() {
+            document.getElementById('purchasesModal').classList.add('hidden');
+            document.getElementById('purchasesModal').classList.remove('flex');
+        }
+
+        function renderPurchasesList() {
+            const container = document.getElementById('purchasesListContainer');
+            document.getElementById('totalPurchasesCount').textContent = purchases.length;
+
+            if (purchases.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 text-xs py-10">Nessun acquisto ancora registrato.</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            purchases.forEach(p => {
+                const div = document.createElement('div');
+                div.className = "bg-[#0d0d11] border border-[#2A2A30] hover:border-cyan-500/40 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 transition-all";
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <img src="https://minotar.net/avatar/${p.player}/36.png" class="w-9 h-9 rounded-lg border border-[#2A2A30]">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-bold text-sm text-white font-cyber">${p.player}</h4>
+                                <span class="text-[10px] bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">${p.items.length} prodotti</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400">Data: ${p.date} | Staffer: <span class="text-cyan-400 font-semibold">${p.staffer || 'non assegnato'}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4">
+                        <div class="text-right">
+                            <span class="text-xs font-bold text-orange-400 font-cyber">€${p.total.toFixed(2)}</span>
+                        </div>
+                        
+                        <!-- 3 PULSANTI AZIONE RICHIESTI -->
+                        <div class="flex items-center gap-2">
+                            <!-- PULSANTE 1: INFO PRODOTTO & ACQUIRENTE -->
+                            <button onclick="openPurchaseInfoModal(${p.id})" title="Vedi Dettagli Prodotto e Acquirente" class="bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer">
+                                <i class="fa-solid fa-eye"></i>
+                                <span class="hidden md:inline">Info</span>
+                            </button>
+
+                            <!-- PULSANTE 2: ASSEGNA STAFFER -->
+                            <button onclick="openAssignStafferModal(${p.id})" title="Assegna uno Staffer" class="bg-cyan-600/20 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <span class="hidden md:inline">Staffer</span>
+                            </button>
+
+                            <!-- PULSANTE 3: ELIMINA ACQUISTO -->
+                            <button onclick="deletePurchase(${p.id})" title="Elimina Registro Acquisto" class="bg-red-600/20 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/40 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span class="hidden md:inline">Elimina</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // AZIONE 1: INFO SUB-MODAL
+        function openPurchaseInfoModal(purchaseId) {
+            const p = purchases.find(item => item.id === purchaseId);
+            if (!p) return;
+
+            document.getElementById('infoPlayerHead').src = `https://minotar.net/avatar/${p.player}/48.png`;
+            document.getElementById('infoPlayerName').textContent = p.player;
+            document.getElementById('infoPurchaseDate').textContent = `Data Acquisto: ${p.date}`;
+            document.getElementById('infoTotalPrice').textContent = `€${p.total.toFixed(2)}`;
+            document.getElementById('infoAssignedStaffer').textContent = p.staffer || 'non assegnato';
+
+            const itemsContainer = document.getElementById('infoItemsList');
+            itemsContainer.innerHTML = '';
+            p.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between bg-[#0d0d11] p-2.5 rounded-xl border border-[#2A2A30] text-xs";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 text-white">
+                        <i class="fa-solid ${item.icon} text-purple-400"></i>
+                        <span>${item.name}</span>
+                    </div>
+                    <span class="text-orange-400 font-bold">€${item.price.toFixed(2)}</span>
+                `;
+                itemsContainer.appendChild(div);
+            });
+
+            document.getElementById('purchaseInfoModal').classList.remove('hidden');
+            document.getElementById('purchaseInfoModal').classList.add('flex');
+        }
+
+        function closePurchaseInfoModal() {
+            document.getElementById('purchaseInfoModal').classList.add('hidden');
+            document.getElementById('purchaseInfoModal').classList.remove('flex');
+        }
+
+        // AZIONE 2: ASSEGNA STAFFER
+        function openAssignStafferModal(purchaseId) {
+            const p = purchases.find(item => item.id === purchaseId);
+            if (!p) return;
+
+            document.getElementById('assignPurchaseId').value = purchaseId;
+            document.getElementById('stafferNameInput').value = p.staffer && p.staffer !== 'non assegnato' ? p.staffer : '';
+            document.getElementById('assignStafferModal').classList.remove('hidden');
+            document.getElementById('assignStafferModal').classList.add('flex');
+        }
+
+        function closeAssignStafferModal() {
+            document.getElementById('assignStafferModal').classList.add('hidden');
+            document.getElementById('assignStafferModal').classList.remove('flex');
+        }
+
+        function saveAssignedStaffer(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('assignPurchaseId').value);
+            const staffer = document.getElementById('stafferNameInput').value.trim();
+
+            purchases = purchases.map(p => p.id === id ? { ...p, staffer: staffer || 'non assegnato' } : p);
+            localStorage.setItem('lmcraft1_purchases', JSON.stringify(purchases));
+
+            renderPurchasesList();
+            closeAssignStafferModal();
+            showToast('Staffer Assegnato', `Acquisto #${id} assegnato a ${staffer}!`, 'fa-user-check');
+        }
+
+        // AZIONE 3: ELIMINA ACQUISTO
+        function deletePurchase(id) {
+            purchases = purchases.filter(p => p.id !== id);
+            localStorage.setItem('lmcraft1_purchases', JSON.stringify(purchases));
+            renderPurchasesList();
+            showToast('Acquisto Eliminato', 'Registro ordine rimosso con successo.', 'fa-trash');
+        }
+
+        // AGGIUNGI & ELIMINA SANZIONI (ADMIN)
+        function handleAddNewSanction(e) {
+            e.preventDefault();
+            const player = document.getElementById('sanctionPlayerName').value.trim();
+            const type = document.getElementById('sanctionType').value;
+            const duration = document.getElementById('sanctionDuration').value.trim();
+            const reason = document.getElementById('sanctionReason').value.trim();
+
+            const newId = sanctions.length > 0 ? Math.max(...sanctions.map(s => s.id)) + 1 : 1001;
+            const now = new Date();
+            const dateStr = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}, ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+            const newSanction = {
+                id: newId,
+                player,
+                uuid: 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => (Math.random()*16|0).toString(16)),
+                type,
+                reason,
+                date: dateStr,
+                duration,
+                lobby: 'SMP',
+                staffer: 'AdminMaster',
+                active: true
+            };
+
+            sanctions.unshift(newSanction);
+            localStorage.setItem('lmcraft1_sanctions', JSON.stringify(sanctions));
+
+            renderBanlistTable();
+            renderAdminSanctionManageList();
+            showToast('Banlist Modificata', `Sanzione #${newId} applicata a ${player}!`, 'fa-gavel');
+            e.target.reset();
+        }
+
+        function deleteSanction(id) {
+            sanctions = sanctions.filter(s => s.id !== id);
+            localStorage.setItem('lmcraft1_sanctions', JSON.stringify(sanctions));
+            renderBanlistTable();
+            renderAdminSanctionManageList();
+            showToast('Banlist Modificata', 'Sanzione rimossa/revocata.', 'fa-trash');
+        }
+
+        function renderAdminSanctionManageList() {
+            const list = document.getElementById('adminSanctionManageList');
+            list.innerHTML = '';
+            sanctions.forEach(s => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between bg-[#16161f] p-2 rounded-lg border border-[#2A2A30] text-xs";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-purple-400 font-bold">#${s.id}</span>
+                        <span class="font-bold text-white">${s.player}</span>
+                        <span class="text-red-400 font-bold">(${s.type})</span>
+                        <span class="text-gray-400 text-[10px] truncate max-w-[120px]">${s.reason}</span>
+                    </div>
+                    <button onclick="deleteSanction(${s.id})" class="text-red-400 hover:text-red-300 p-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // AGGIUNGI & ELIMINA PRODOTTI STORE (ADMIN)
+        function handleAddNewStoreProduct(e) {
+            e.preventDefault();
+            const category = document.getElementById('newProdCategory').value;
+            const name = document.getElementById('newProdName').value.trim();
+            const price = parseFloat(document.getElementById('newProdPrice').value);
+            const icon = document.getElementById('newProdIcon').value.trim() || 'fa-star';
+
+            const newProd = { id: Date.now(), category, name, price, icon };
+            storeProducts.push(newProd);
+            localStorage.setItem('lmcraft1_store_products', JSON.stringify(storeProducts));
+
+            renderStoreProducts();
+            renderAdminProductManageList();
+            showToast('Store Modificato', `Prodotto "${name}" aggiunto!`, 'fa-plus');
+            e.target.reset();
+        }
+
+        function deleteStoreProduct(id) {
+            storeProducts = storeProducts.filter(p => p.id !== id);
+            localStorage.setItem('lmcraft1_store_products', JSON.stringify(storeProducts));
+            renderStoreProducts();
+            renderAdminProductManageList();
+            showToast('Store Modificato', 'Prodotto rimosso.', 'fa-trash');
+        }
+
+        function renderAdminProductManageList() {
+            const list = document.getElementById('adminProductManageList');
+            list.innerHTML = '';
+            storeProducts.forEach(p => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between bg-[#16161f] p-2 rounded-lg border border-[#2A2A30] text-xs";
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid ${p.icon} text-purple-400"></i>
+                        <span class="font-bold text-white">${p.name}</span>
+                        <span class="text-gray-400">(${p.category})</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-orange-400 font-bold">€${p.price.toFixed(2)}</span>
+                        <button onclick="deleteStoreProduct(${p.id})" class="text-red-400 hover:text-red-300 p-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function showToast(title, msg, icon) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = msg;
+            document.getElementById('toastIcon').innerHTML = `<i class="fa-solid ${icon}"></i>`;
+            toast.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-32', 'opacity-0'), 3000);
+        }
+
+        // BACKGROUND PARTICLES
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const particles = Array.from({ length: 35 }, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 1,
+            speedX: (Math.random() - 0.5) * 0.3,
+            speedY: (Math.random() - 0.5) * 0.3,
+            color: Math.random() > 0.5 ? 'rgba(0, 243, 255, 0.3)' : 'rgba(139, 92, 246, 0.3)'
+        }));
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.speedX; p.y += p.speedY;
+                if (p.x < 0) p.x = canvas.width; if (p.x > canvas.width) p.x = 0;
+                if (p.y < 0) p.y = canvas.height; if (p.y > canvas.height) p.y = 0;
+                ctx.fillStyle = p.color; ctx.beginPath(); ctx.rect(p.x, p.y, p.size, p.size); ctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        // INIT
+        window.onload = function() {
+            animateParticles();
+            renderStoreProducts();
+            renderBanlistTable();
+        }
+    </script>
+</body>
+</html>
